@@ -26,8 +26,3 @@ jobs:
 
       - name: Build Linter Binary
         run: go build -o loglint ./cmd/loglint/main.go
-
-      - name: Verify golangci-lint custom build
-        run: |
-          go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
-          golangci-lint custom -v

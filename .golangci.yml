@@ -1,0 +1,16 @@
+linters:
+  disable-all: true
+  enable:
+    - loglint
+
+linters-settings:
+  custom:
+    loglint:
+      type: "module"
+      description: "Linter for checking log messages style and security"
+      settings:
+        sensitive-words: "password,api_key,token,secret,credit_card"
+        enable-sensitive: true
+        enable-style: true
+        enable-english: true
+        enable-special: true

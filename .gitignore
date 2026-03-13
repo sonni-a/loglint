@@ -1,0 +1,5 @@
+*.exe
+
+vendor/
+.idea/
+.vscode/

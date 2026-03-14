@@ -43,6 +43,8 @@
 При желании можно изменить настройки линтера в .golangci.yml и сохранить файл, заново собирать бинарник при этом не нужно!
 
 Примеры использования:
-![img](https://i127.fastpic.org/big/2026/0314/c2/7c673096db7d82aa7a368447ec2102c2.jpeg)
-![img](https://i127.fastpic.org/big/2026/0314/aa/9d82ad05a001c5c63b42b38319042eaa.jpeg)
+![Img 1](https://i127.fastpic.org/big/2026/0314/c2/7c673096db7d82aa7a368447ec2102c2.jpeg)
+
+![Img2](https://i127.fastpic.org/big/2026/0314/aa/9d82ad05a001c5c63b42b38319042eaa.png)
+
 После -fix останутся только log message must be in English.

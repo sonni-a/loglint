@@ -40,9 +40,6 @@ func CheckSpecialChars(msg string) (string, string) {
 
 func CheckEnglish(msg string) (string, string) {
 	for _, r := range msg {
-		if unicode.IsLetter(r) && !unicode.In(r, unicode.Latin) {
-			return "must be in English", msg
-		}
 		if r > unicode.MaxASCII {
 			return "must be in English", msg
 		}
@@ -51,9 +48,8 @@ func CheckEnglish(msg string) (string, string) {
 }
 
 func CheckSensitive(msg string, userPatterns []string) (string, string) {
-	lowerMsg := strings.ToLower(msg)
-	found := false
 	fixed := msg
+	found := false
 
 	for _, pattern := range userPatterns {
 		cleanPattern := strings.TrimSpace(pattern)
@@ -61,18 +57,36 @@ func CheckSensitive(msg string, userPatterns []string) (string, string) {
 			continue
 		}
 
-		if strings.Contains(lowerMsg, strings.ToLower(cleanPattern)) {
-			found = true
-			idx := strings.Index(strings.ToLower(fixed), strings.ToLower(cleanPattern))
-			for idx != -1 {
-				fixed = fixed[:idx] + "[redacted]" + fixed[idx+len(cleanPattern):]
-				idx = strings.Index(strings.ToLower(fixed), strings.ToLower(cleanPattern))
-			}
+		lowerPattern := strings.ToLower(cleanPattern)
+		lowerFixed := strings.ToLower(fixed)
+		if !strings.Contains(lowerFixed, lowerPattern) {
+			continue
 		}
+
+		found = true
+		fixed = redactAll(fixed, lowerFixed, lowerPattern)
 	}
 
 	if found {
 		return "may contain sensitive data", fixed
 	}
 	return "", ""
+}
+
+func redactAll(s, lowerS, lowerPattern string) string {
+	var b strings.Builder
+	last := 0
+	patternLen := len(lowerPattern)
+
+	for i := 0; i <= len(lowerS)-patternLen; i++ {
+		if lowerS[i:i+patternLen] == lowerPattern {
+			b.WriteString(s[last:i])
+			b.WriteString("[redacted]")
+			last = i + patternLen
+			i += patternLen - 1
+		}
+	}
+
+	b.WriteString(s[last:])
+	return b.String()
 }

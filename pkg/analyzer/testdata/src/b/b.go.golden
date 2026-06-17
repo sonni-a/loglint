@@ -26,17 +26,17 @@ func (l *Logger) Fatalw(msg string, keysAndValues ...interface{}) {}
 var zapLogger Logger
 
 func TestZapLogger() {
-	zapLogger.Info("starting server")    // want `log message must start with lowercase letter`
-	zapLogger.Error("error happened")    // want `log message contains special characters`
-	zapLogger.Debug("[redacted] 123456") // want `log message may contain sensitive data`
-	zapLogger.Warn("что-то не так")      // want `log message must be in English`
+	zapLogger.Info("starting server")
+	zapLogger.Error("error happened")
+	zapLogger.Debug("redacted 123456")
+	zapLogger.Warn("чтото не так")
 
-	zapLogger.Infow("starting server", "port", 8080) // want `log message must start with lowercase letter`
-	zapLogger.Errorw("error happened", "code", 500)  // want `log message contains special characters`
+	zapLogger.Infow("starting server", "port", 8080)
+	zapLogger.Errorw("error happened", "code", 500)
 
-	zapLogger.DPanic("dPanic happened") // want `log message must start with lowercase letter`
+	zapLogger.DPanic("dPanic happened")
 
-	zapLogger.Panic("Panic") // want `log message contains special characters`
+	zapLogger.Panic("panic")
 
-	zapLogger.Fatal("fatal error") // want `log message must start with lowercase letter`
+	zapLogger.Fatal("fatal error")
 }

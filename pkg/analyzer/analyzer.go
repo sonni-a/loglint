@@ -70,27 +70,41 @@ func checkLogCall(pass *analysis.Pass, call *ast.CallExpr, cfg analyzerConfig) {
 		checks = append(checks, rules.CheckLowercase)
 	}
 
-	for _, check := range checks {
-		errMsg, fixedMsg := check(msg)
-		if errMsg != "" {
-			diag := analysis.Diagnostic{
-				Pos:     lit.Pos(),
-				End:     lit.End(),
-				Message: "log message " + errMsg,
-			}
+	var violations []string
 
-			if fixedMsg != msg {
-				diag.SuggestedFixes = []analysis.SuggestedFix{{
-					Message: "apply fix",
-					TextEdits: []analysis.TextEdit{{
-						Pos:     lit.Pos(),
-						End:     lit.End(),
-						NewText: []byte(strconv.Quote(fixedMsg)),
-					}},
-				}}
-			}
-			pass.Report(diag)
-			return
+	for _, check := range checks {
+		errMsg, _ := check(msg)
+		if errMsg != "" {
+			violations = append(violations, errMsg)
 		}
+	}
+
+	combined := msg
+	for _, check := range checks {
+		errMsg, fixedMsg := check(combined)
+		if errMsg != "" && fixedMsg != combined {
+			combined = fixedMsg
+		}
+	}
+
+	for i, errMsg := range violations {
+		diag := analysis.Diagnostic{
+			Pos:     lit.Pos(),
+			End:     lit.End(),
+			Message: "log message " + errMsg,
+		}
+
+		if i == len(violations)-1 && combined != msg {
+			diag.SuggestedFixes = []analysis.SuggestedFix{{
+				Message: "apply fix",
+				TextEdits: []analysis.TextEdit{{
+					Pos:     lit.Pos(),
+					End:     lit.End(),
+					NewText: []byte(strconv.Quote(combined)),
+				}},
+			}}
+		}
+
+		pass.Report(diag)
 	}
 }

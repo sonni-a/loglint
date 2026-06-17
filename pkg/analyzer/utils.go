@@ -2,10 +2,21 @@ package analyzer
 
 import (
 	"go/ast"
+	"go/types"
 	"strings"
 
 	"golang.org/x/tools/go/analysis"
 )
+
+var logLevels = map[string]bool{
+	"Debug": true, "Info": true, "Warn": true, "Error": true,
+	"DPanic": true, "Panic": true, "Fatal": true,
+}
+
+var knownLogPackages = map[string]bool{
+	"log":      true,
+	"log/slog": true,
+}
 
 func getMsgArgIndex(name string) int {
 	switch {
@@ -19,25 +30,24 @@ func getMsgArgIndex(name string) int {
 }
 
 func isLogMethod(name string) bool {
-	levels := map[string]bool{
-		"Debug": true, "Info": true, "Warn": true, "Error": true,
-		"DPanic": true, "Panic": true, "Fatal": true,
-	}
 	base := strings.TrimSuffix(strings.TrimSuffix(strings.TrimSuffix(name, "f"), "w"), "Context")
-	return levels[base] || name == "Log" || name == "LogAttrs"
+	return logLevels[base] || name == "Log" || name == "LogAttrs"
 }
 
 func isSupportedLogger(pass *analysis.Pass, sel *ast.SelectorExpr) bool {
 	if ident, ok := sel.X.(*ast.Ident); ok {
-		name := strings.ToLower(ident.Name)
-		if name == "zaplogger" || name == "logger" || name == "log" || name == "slog" {
-			return true
+		if obj, ok := pass.TypesInfo.Uses[ident].(*types.PkgName); ok {
+			if knownLogPackages[obj.Imported().Path()] {
+				return true
+			}
 		}
 	}
+
 	typ := pass.TypesInfo.TypeOf(sel.X)
 	if typ != nil {
 		typeStr := strings.ToLower(typ.String())
 		return strings.Contains(typeStr, "logger") || strings.Contains(typeStr, "zap")
 	}
+
 	return false
 }

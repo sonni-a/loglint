@@ -31,13 +31,15 @@ func New(settings any) (register.LinterPlugin, error) {
 }
 
 func (p *LogLintPlugin) BuildAnalyzers() ([]*analysis.Analyzer, error) {
-	sensitiveWords = p.config.SensitiveWords
-	enableSensitive = p.config.EnableSensitive
-	enableStyle = p.config.EnableStyle
-	enableEnglish = p.config.EnableEnglish
-	enableSpecial = p.config.EnableSpecial
+	cfg := analyzerConfig{
+		sensitiveWords:  parseWords(p.config.SensitiveWords),
+		enableSensitive: p.config.EnableSensitive,
+		enableStyle:     p.config.EnableStyle,
+		enableEnglish:   p.config.EnableEnglish,
+		enableSpecial:   p.config.EnableSpecial,
+	}
 
-	return []*analysis.Analyzer{Analyzer}, nil
+	return []*analysis.Analyzer{NewAnalyzer(cfg)}, nil
 }
 
 func (p *LogLintPlugin) GetLoadMode() string {

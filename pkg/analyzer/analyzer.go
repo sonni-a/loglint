@@ -4,33 +4,26 @@ import (
 	"go/ast"
 	"go/token"
 	"strconv"
-	"strings"
 
 	"github.com/sonni-a/loglint/pkg/rules"
 	"golang.org/x/tools/go/analysis"
 )
 
-var Analyzer = &analysis.Analyzer{
-	Name: "loglint",
-	Doc:  "checks log messages for style and security rules",
-	Run:  run,
-}
-
-func run(pass *analysis.Pass) (interface{}, error) {
+func run(pass *analysis.Pass, cfg analyzerConfig) (interface{}, error) {
 	for _, file := range pass.Files {
 		ast.Inspect(file, func(n ast.Node) bool {
 			call, ok := n.(*ast.CallExpr)
 			if !ok {
 				return true
 			}
-			checkLogCall(pass, call)
+			checkLogCall(pass, call, cfg)
 			return true
 		})
 	}
 	return nil, nil
 }
 
-func checkLogCall(pass *analysis.Pass, call *ast.CallExpr) {
+func checkLogCall(pass *analysis.Pass, call *ast.CallExpr, cfg analyzerConfig) {
 	sel, ok := call.Fun.(*ast.SelectorExpr)
 	if !ok {
 		return
@@ -58,29 +51,22 @@ func checkLogCall(pass *analysis.Pass, call *ast.CallExpr) {
 
 	var checks []func(string) (string, string)
 
-	if enableSensitive {
-		words := strings.Split(sensitiveWords, ",")
-		var userWords []string
-		for _, w := range words {
-			if s := strings.TrimSpace(w); s != "" {
-				userWords = append(userWords, s)
-			}
-		}
-
+	if cfg.enableSensitive {
+		words := cfg.sensitiveWords
 		checks = append(checks, func(s string) (string, string) {
-			return rules.CheckSensitive(s, userWords)
+			return rules.CheckSensitive(s, words)
 		})
 	}
 
-	if enableEnglish {
+	if cfg.enableEnglish {
 		checks = append(checks, rules.CheckEnglish)
 	}
 
-	if enableSpecial {
+	if cfg.enableSpecial {
 		checks = append(checks, rules.CheckSpecialChars)
 	}
 
-	if enableStyle {
+	if cfg.enableStyle {
 		checks = append(checks, rules.CheckLowercase)
 	}
 

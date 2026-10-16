@@ -7,10 +7,10 @@ import (
 
 type Config struct {
 	SensitiveWords  string `json:"sensitive-words"`
-	EnableSensitive bool   `json:"enable-sensitive"`
-	EnableStyle     bool   `json:"enable-style"`
-	EnableEnglish   bool   `json:"enable-english"`
-	EnableSpecial   bool   `json:"enable-special"`
+	EnableSensitive *bool  `json:"enable-sensitive"`
+	EnableStyle     *bool  `json:"enable-style"`
+	EnableEnglish   *bool  `json:"enable-english"`
+	EnableSpecial   *bool  `json:"enable-special"`
 }
 
 func init() {
@@ -31,15 +31,27 @@ func New(settings any) (register.LinterPlugin, error) {
 }
 
 func (p *LogLintPlugin) BuildAnalyzers() ([]*analysis.Analyzer, error) {
-	cfg := analyzerConfig{
-		sensitiveWords:  parseWords(p.config.SensitiveWords),
-		enableSensitive: p.config.EnableSensitive,
-		enableStyle:     p.config.EnableStyle,
-		enableEnglish:   p.config.EnableEnglish,
-		enableSpecial:   p.config.EnableSpecial,
-	}
+	return []*analysis.Analyzer{NewAnalyzer(p.analyzerConfig())}, nil
+}
 
-	return []*analysis.Analyzer{NewAnalyzer(cfg)}, nil
+func (p *LogLintPlugin) analyzerConfig() analyzerConfig {
+	cfg := defaultConfig()
+	if words := parseWords(p.config.SensitiveWords); len(words) > 0 {
+		cfg.sensitiveWords = words
+	}
+	if p.config.EnableSensitive != nil {
+		cfg.enableSensitive = *p.config.EnableSensitive
+	}
+	if p.config.EnableStyle != nil {
+		cfg.enableStyle = *p.config.EnableStyle
+	}
+	if p.config.EnableEnglish != nil {
+		cfg.enableEnglish = *p.config.EnableEnglish
+	}
+	if p.config.EnableSpecial != nil {
+		cfg.enableSpecial = *p.config.EnableSpecial
+	}
+	return cfg
 }
 
 func (p *LogLintPlugin) GetLoadMode() string {

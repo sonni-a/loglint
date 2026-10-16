@@ -29,16 +29,26 @@ func getMsgArgIndex(name string) int {
 	}
 }
 
+func logMethodBase(name string) string {
+	for _, suffix := range []string{"f", "w", "ln", "Context"} {
+		name = strings.TrimSuffix(name, suffix)
+	}
+	return name
+}
+
 func isLogMethod(name string) bool {
-	base := strings.TrimSuffix(strings.TrimSuffix(strings.TrimSuffix(name, "f"), "w"), "Context")
-	return logLevels[base] || name == "Log" || name == "LogAttrs"
+	if name == "Log" || name == "LogAttrs" {
+		return true
+	}
+	base := logMethodBase(name)
+	return logLevels[base] || base == "Print"
 }
 
 func isFormatMethod(name string) bool {
 	if !strings.HasSuffix(name, "f") {
 		return false
 	}
-	base := strings.TrimSuffix(strings.TrimSuffix(name, "f"), "Context")
+	base := logMethodBase(name)
 	return logLevels[base] || base == "Print"
 }
 

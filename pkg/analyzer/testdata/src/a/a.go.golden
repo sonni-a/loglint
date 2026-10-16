@@ -23,4 +23,10 @@ func testSlog() {
 	slog.Info("done ...")                      // want `log message must be in English` `log message contains special characters`
 	Logger{}.Infof("user %s logged in", "bob") // want `log message must start with lowercase letter`
 	log.Fatalf("error %s!!!", "x")             // want `log message contains special characters`
+	log.Print("starting server")               // want `log message must start with lowercase letter`
+	log.Printf("user %s!!!", "bob")            // want `log message contains special characters` `log message must start with lowercase letter`
+	log.Println("starting server")             // want `log message contains special characters` `log message must start with lowercase letter`
+	log.Fatalln("error happened")              // want `log message contains special characters`
+	log.Panicln("panic")                       // want `log message contains special characters` `log message must start with lowercase letter`
+	log.Default().Printf("user %s", "bob")     // want `log message must start with lowercase letter`
 }

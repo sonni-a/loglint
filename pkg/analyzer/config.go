@@ -61,8 +61,9 @@ func newCLIAnalyzer() *analysis.Analyzer {
 	a.Flags.BoolVar(&cfg.enableSpecial, "enable-special", cfg.enableSpecial, "enable special characters check")
 
 	a.Run = func(pass *analysis.Pass) (interface{}, error) {
-		cfg.sensitiveWords = parseWords(words)
-		return run(pass, cfg)
+		local := cfg
+		local.sensitiveWords = parseWords(words)
+		return run(pass, local)
 	}
 
 	return a

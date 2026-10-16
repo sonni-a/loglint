@@ -30,11 +30,12 @@ func checkLogCall(pass *analysis.Pass, call *ast.CallExpr, cfg analyzerConfig) {
 	}
 
 	funcName := sel.Sel.Name
-	if !isLogMethod(funcName) || !isSupportedLogger(pass, sel) {
+	obj := selectorObject(pass, sel)
+	if !isLogMethod(funcName) || !isSupportedLogger(obj) {
 		return
 	}
 
-	msgIdx := getMsgArgIndex(funcName)
+	msgIdx := msgArgIndex(obj)
 	if len(call.Args) <= msgIdx {
 		return
 	}

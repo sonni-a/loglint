@@ -14,19 +14,9 @@ var logLevels = map[string]bool{
 }
 
 var knownLogPackages = map[string]bool{
-	"log":      true,
-	"log/slog": true,
-}
-
-func getMsgArgIndex(name string) int {
-	switch {
-	case name == "Log" || name == "LogAttrs":
-		return 2
-	case strings.HasSuffix(name, "Context"):
-		return 1
-	default:
-		return 0
-	}
+	"log":               true,
+	"log/slog":          true,
+	"go.uber.org/zap":   true,
 }
 
 func logMethodBase(name string) string {
@@ -52,20 +42,56 @@ func isFormatMethod(name string) bool {
 	return logLevels[base] || base == "Print"
 }
 
-func isSupportedLogger(pass *analysis.Pass, sel *ast.SelectorExpr) bool {
-	if ident, ok := sel.X.(*ast.Ident); ok {
-		if obj, ok := pass.TypesInfo.Uses[ident].(*types.PkgName); ok {
-			if knownLogPackages[obj.Imported().Path()] {
-				return true
-			}
+func selectorObject(pass *analysis.Pass, sel *ast.SelectorExpr) types.Object {
+	if obj := pass.TypesInfo.ObjectOf(sel.Sel); obj != nil {
+		return obj
+	}
+	if seln := pass.TypesInfo.Selections[sel]; seln != nil {
+		return seln.Obj()
+	}
+	return nil
+}
+
+func isSupportedLogger(obj types.Object) bool {
+	if obj == nil {
+		return false
+	}
+	if pkg := obj.Pkg(); pkg != nil && knownLogPackages[pkg.Path()] {
+		return true
+	}
+	sig, ok := obj.Type().(*types.Signature)
+	if !ok || sig.Recv() == nil {
+		return false
+	}
+	return strings.Contains(strings.ToLower(namedTypeName(sig.Recv().Type())), "logger")
+}
+
+func namedTypeName(t types.Type) string {
+	if p, ok := t.(*types.Pointer); ok {
+		t = p.Elem()
+	}
+	named, ok := t.(*types.Named)
+	if !ok {
+		return ""
+	}
+	return named.Obj().Name()
+}
+
+func msgArgIndex(obj types.Object) int {
+	sig, ok := obj.Type().(*types.Signature)
+	if !ok {
+		return 0
+	}
+	params := sig.Params()
+	for i := 0; i < params.Len(); i++ {
+		if isStringType(params.At(i).Type()) {
+			return i
 		}
 	}
+	return 0
+}
 
-	typ := pass.TypesInfo.TypeOf(sel.X)
-	if typ != nil {
-		typeStr := strings.ToLower(typ.String())
-		return strings.Contains(typeStr, "logger") || strings.Contains(typeStr, "zap")
-	}
-
-	return false
+func isStringType(t types.Type) bool {
+	basic, ok := t.Underlying().(*types.Basic)
+	return ok && basic.Kind() == types.String
 }

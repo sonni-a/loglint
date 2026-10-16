@@ -28,8 +28,8 @@ var zapLogger Logger
 func TestZapLogger() {
 	zapLogger.Info("Starting server")    // want `log message must start with lowercase letter`
 	zapLogger.Error("error happened!!!") // want `log message contains special characters`
-	zapLogger.Debug("api_key 123456")    // want `log message may contain sensitive data` `log message contains special characters`
-	zapLogger.Warn("что-то не так")      // want `log message must be in English` `log message contains special characters`
+	zapLogger.Debug("api_key 123456") // want `log message may contain sensitive data`
+	zapLogger.Warn("что-то не так")   // want `log message must be in English`
 
 	zapLogger.Infow("Starting server", "port", 8080)   // want `log message must start with lowercase letter`
 	zapLogger.Errorw("error happened!!!", "code", 500) // want `log message contains special characters`

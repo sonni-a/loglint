@@ -18,24 +18,36 @@ func CheckLowercase(msg string) (string, string) {
 	return "", ""
 }
 
+func isStrippable(r rune) bool {
+	switch r {
+	case '!', '?':
+		return true
+	default:
+		return unicode.Is(unicode.So, r)
+	}
+}
+
 func CheckSpecialChars(msg string) (string, string) {
-	var fixed strings.Builder
-	foundSpecial := false
+	var b strings.Builder
+	found := false
 
 	for _, r := range msg {
-		if unicode.IsLetter(r) || unicode.IsDigit(r) || unicode.IsSpace(r) {
-			fixed.WriteRune(r)
-		} else {
-			foundSpecial = true
+		if isStrippable(r) {
+			found = true
+			continue
 		}
+		b.WriteRune(r)
 	}
 
-	if foundSpecial {
-		result := strings.Join(strings.Fields(fixed.String()), " ")
-		return "contains special characters", result
+	if !found {
+		return "", ""
 	}
 
-	return "", ""
+	fixed := strings.Join(strings.Fields(b.String()), " ")
+	if fixed == "" || fixed == msg {
+		return "contains special characters", msg
+	}
+	return "contains special characters", fixed
 }
 
 func CheckEnglish(msg string) (string, string) {
@@ -81,7 +93,7 @@ func redactAll(s, lowerS, lowerPattern string) string {
 	for i := 0; i <= len(lowerS)-patternLen; i++ {
 		if lowerS[i:i+patternLen] == lowerPattern {
 			b.WriteString(s[last:i])
-			b.WriteString("[redacted]")
+			b.WriteString("redacted")
 			last = i + patternLen
 			i += patternLen - 1
 		}

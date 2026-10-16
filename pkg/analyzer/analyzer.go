@@ -49,42 +49,64 @@ func checkLogCall(pass *analysis.Pass, call *ast.CallExpr, cfg analyzerConfig) {
 		return
 	}
 
-	var checks []func(string) (string, string)
+	type logCheck struct {
+		apply func(string) (string, string)
+		fix   bool
+	}
+
+	var checks []logCheck
 
 	if cfg.enableSensitive {
 		words := cfg.sensitiveWords
-		checks = append(checks, func(s string) (string, string) {
-			return rules.CheckSensitive(s, words)
+		checks = append(checks, logCheck{
+			apply: func(s string) (string, string) {
+				return rules.CheckSensitive(s, words)
+			},
+			fix: true,
 		})
 	}
 
 	if cfg.enableEnglish {
-		checks = append(checks, rules.CheckEnglish)
+		checks = append(checks, logCheck{apply: rules.CheckEnglish, fix: true})
 	}
 
 	if cfg.enableSpecial {
-		checks = append(checks, rules.CheckSpecialChars)
+		checks = append(checks, logCheck{
+			apply: rules.CheckSpecialChars,
+			fix:   !isFormatMethod(funcName),
+		})
 	}
 
 	if cfg.enableStyle {
-		checks = append(checks, rules.CheckLowercase)
+		checks = append(checks, logCheck{apply: rules.CheckLowercase, fix: true})
 	}
 
 	var violations []string
 
 	for _, check := range checks {
-		errMsg, _ := check(msg)
+		errMsg, _ := check.apply(msg)
 		if errMsg != "" {
 			violations = append(violations, errMsg)
 		}
 	}
 
 	combined := msg
-	for _, check := range checks {
-		errMsg, fixedMsg := check(combined)
-		if errMsg != "" && fixedMsg != combined {
-			combined = fixedMsg
+	const maxFixPasses = 5
+	for range maxFixPasses {
+		next := combined
+		for _, check := range checks {
+			if !check.fix {
+				continue
+			}
+			errMsg, fixedMsg := check.apply(next)
+			if errMsg != "" && fixedMsg != "" && fixedMsg != next {
+				next = fixedMsg
+			}
 		}
+		if next == combined {
+			break
+		}
+		combined = next
 	}
 
 	for i, errMsg := range violations {

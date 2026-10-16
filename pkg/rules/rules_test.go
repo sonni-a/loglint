@@ -36,9 +36,14 @@ func TestCheckSpecialChars(t *testing.T) {
 	}{
 		{"Clean string", "server started", "", ""},
 		{"With exclamation", "error!!!", "contains special characters", "error"},
-		{"With percent and space", "value %d is set", "contains special characters", "value d is set"},
-		{"Emoji and dots", "done 🚀...", "contains special characters", "done"},
-		{"Mixed symbols", "user_id: 123", "contains special characters", "userid 123"},
+		{"Question mark", "are you ok?", "contains special characters", "are you ok"},
+		{"Only exclamations", "!!!", "contains special characters", "!!!"},
+		{"Percent kept", "value %d is set", "", ""},
+		{"Version kept", "version 1.2.3", "", ""},
+		{"URL kept", "https://example.com/a", "", ""},
+		{"Hyphen kept", "pass-word", "", ""},
+		{"Emoji and dots", "done 🚀...", "contains special characters", "done ..."},
+		{"Underscore kept", "user_id: 123", "", ""},
 	}
 
 	for _, tt := range tests {
@@ -81,9 +86,9 @@ func TestCheckSensitive(t *testing.T) {
 		wantFix string
 	}{
 		{"No secrets", "process started", "", ""},
-		{"Contains password", "my password is 123", "may contain sensitive data", "my [redacted] is 123"},
-		{"Case insensitive", "API_KEY=hidden", "may contain sensitive data", "[redacted]=hidden"},
-		{"Multiple secrets", "token: abc, password: 123", "may contain sensitive data", "[redacted]: abc, [redacted]: 123"},
+		{"Contains password", "my password is 123", "may contain sensitive data", "my redacted is 123"},
+		{"Case insensitive", "API_KEY=hidden", "may contain sensitive data", "redacted=hidden"},
+		{"Multiple secrets", "token: abc, password: 123", "may contain sensitive data", "redacted: abc, redacted: 123"},
 	}
 
 	for _, tt := range tests {

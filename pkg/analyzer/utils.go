@@ -34,6 +34,14 @@ func isLogMethod(name string) bool {
 	return logLevels[base] || name == "Log" || name == "LogAttrs"
 }
 
+func isFormatMethod(name string) bool {
+	if !strings.HasSuffix(name, "f") {
+		return false
+	}
+	base := strings.TrimSuffix(strings.TrimSuffix(name, "f"), "Context")
+	return logLevels[base] || base == "Print"
+}
+
 func isSupportedLogger(pass *analysis.Pass, sel *ast.SelectorExpr) bool {
 	if ident, ok := sel.X.(*ast.Ident); ok {
 		if obj, ok := pass.TypesInfo.Uses[ident].(*types.PkgName); ok {

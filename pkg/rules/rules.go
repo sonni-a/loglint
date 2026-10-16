@@ -1,6 +1,7 @@
 package rules
 
 import (
+	"regexp"
 	"strings"
 	"unicode"
 	"unicode/utf8"
@@ -69,14 +70,13 @@ func CheckSensitive(msg string, userPatterns []string) (string, string) {
 			continue
 		}
 
-		lowerPattern := strings.ToLower(cleanPattern)
-		lowerFixed := strings.ToLower(fixed)
-		if !strings.Contains(lowerFixed, lowerPattern) {
+		next := redactAll(fixed, cleanPattern)
+		if next == fixed {
 			continue
 		}
 
 		found = true
-		fixed = redactAll(fixed, lowerFixed, lowerPattern)
+		fixed = next
 	}
 
 	if found {
@@ -85,20 +85,7 @@ func CheckSensitive(msg string, userPatterns []string) (string, string) {
 	return "", ""
 }
 
-func redactAll(s, lowerS, lowerPattern string) string {
-	var b strings.Builder
-	last := 0
-	patternLen := len(lowerPattern)
-
-	for i := 0; i <= len(lowerS)-patternLen; i++ {
-		if lowerS[i:i+patternLen] == lowerPattern {
-			b.WriteString(s[last:i])
-			b.WriteString("redacted")
-			last = i + patternLen
-			i += patternLen - 1
-		}
-	}
-
-	b.WriteString(s[last:])
-	return b.String()
+func redactAll(s, pattern string) string {
+	re := regexp.MustCompile("(?i)" + regexp.QuoteMeta(pattern))
+	return re.ReplaceAllString(s, "redacted")
 }

@@ -89,6 +89,10 @@ func TestCheckSensitive(t *testing.T) {
 		{"Contains password", "my password is 123", "may contain sensitive data", "my redacted is 123"},
 		{"Case insensitive", "API_KEY=hidden", "may contain sensitive data", "redacted=hidden"},
 		{"Multiple secrets", "token: abc, password: 123", "may contain sensitive data", "redacted: abc, redacted: 123"},
+		{"Turkish I before secret", "\u0130password", "may contain sensitive data", "\u0130redacted"},
+		{"Expanding rune before secret", "\u023Apassword", "may contain sensitive data", "\u023Aredacted"},
+		{"Cyrillic before secret", "привет password", "may contain sensitive data", "привет redacted"},
+		{"Secret then Turkish I", "password\u0130", "may contain sensitive data", "redacted\u0130"},
 	}
 
 	for _, tt := range tests {

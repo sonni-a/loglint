@@ -36,7 +36,7 @@
    ```bash
    go build -o loglint ./cmd/loglint
    ```
-6. Чтобы собрать custom-gcl (плагин для golangci-lint), выполните в корне проекта:
+6. Чтобы собрать custom-gcl, нужен golangci-lint v2. В корне проекта:
    ```bash
    golangci-lint custom
    ```

@@ -1,6 +1,6 @@
 module github.com/sonni-a/loglint
 
-go 1.24.5
+go 1.27.0
 
 require (
 	github.com/golangci/plugin-module-register v0.1.2

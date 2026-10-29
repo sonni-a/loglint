@@ -16,10 +16,13 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.24'
+          go-version: '1.27'
 
       - name: Install dependencies
         run: go mod tidy
+
+      - name: Run go vent
+        run: go vet ./...
 
       - name: Run Tests
         run: go test -v ./pkg/...

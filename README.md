@@ -2,13 +2,13 @@
 
 [![CI](https://github.com/sonni-a/loglint/actions/workflows/ci.yml/badge.svg)](https://github.com/sonni-a/loglint/actions/workflows/ci.yml)
 
-Линтер на Go, совместимый с golangci-lint, анализирующий лог-записи в коде и проверяющий их соответствие установленным правилам.
-Поддерживаются `log/slog`, стандартный `log` и логгеры с типом, содержащим `logger` или `zap` (в том числе zap-совместимые обёртки).
+Линтер для golangci-lint: проверяет текст сообщений в вызовах логгера.
+Поддерживаются `log`, `log/slog`, `go.uber.org/zap` и типы с `logger` в имени.
 
 ## Функционал
 
 * **CheckLowercase**: лог-сообщения должны начинаться со строчной буквы.
-* **CheckSpecialChars**: лог-сообщения не должны содержать спецсимволы или эмодзи.
+* **CheckSpecialChars**: в сообщении не должно быть `!`, `?` и эмодзи.
 * **CheckEnglish**: лог-сообщения должны быть только на английском языке (ASCII).
 * **CheckSensitive**: лог-сообщения не должны содержать потенциально чувствительные данные.
 
@@ -16,40 +16,39 @@
 
 ## Инструкция по запуску
 
-1. Склонировать репозиторий
+Нужен Go 1.27.
+
+1. Склонировать репозиторий и перейти в него:
    ```bash
    git clone https://github.com/sonni-a/loglint.git
-   ```
-2. Перейти в папку с проектом loglint
-   ```bash
    cd loglint
    ```
-3. Скачать зависимости
+2. Прогнать тесты:
    ```bash
-   go mod tidy
+   go test ./...
    ```
-4. Выполнить тестирование:
-   ```bash
-   go test -v ./...
-   ```
-5. Собрать standalone-версию линтера:
+3. Собрать линтер и запустить его в этом модуле:
    ```bash
    go build -o loglint ./cmd/loglint
+   ./loglint ./...
+   ./loglint -fix ./...
    ```
-6. Чтобы собрать custom-gcl, нужен golangci-lint v2. В корне проекта:
-   ```bash
-   golangci-lint custom
-   ```
-7. Запустить анализ на другом проекте, скопировав `custom-gcl` (на Windows — `custom-gcl.exe`) и `.golangci.yml` в корень проекта:
-   ```bash
-   ./custom-gcl run
-   ```
-8. Запустить линтер с autofix:
-   ```bash
-   ./custom-gcl run --fix
-   ```
+   На Windows: `.\loglint ./...`
 
-Настройки линтера можно изменить в `.golangci.yml` — после этого пересобирать бинарник не нужно.
+Подключить к golangci-lint v2 можно так. Команда `golangci-lint` должна быть в `PATH`.
+
+```bash
+golangci-lint custom
+```
+
+Скопируйте `custom-gcl` (на Windows — `custom-gcl.exe`) и `.golangci.yml` в корень другого Go-модуля:
+
+```bash
+./custom-gcl run
+./custom-gcl run --fix
+```
+
+Правила меняются в `.golangci.yml`, пересобирать бинарник для этого не нужно.
 
 Примеры использования:
 
